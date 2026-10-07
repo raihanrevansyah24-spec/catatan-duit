@@ -1,12 +1,12 @@
 // Catatan Duit — bikin aplikasi tetap jalan tanpa internet.
 // Naikkan VERSION setiap kali index.html diubah supaya HP ambil versi baru.
-const VERSION = "v2";
+const VERSION = "v3";
 const SHELL = `catatan-duit-shell-${VERSION}`;
 const FONTS = "catatan-duit-fonts";
 const FILES = ["./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(SHELL).then(c => Promise.all(FILES.map(f => c.add(f).catch(() => {})))).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(SHELL).then(c => Promise.all(FILES.map(f => c.add(new Request(f, { cache: "reload" })).catch(() => {})))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", e => {

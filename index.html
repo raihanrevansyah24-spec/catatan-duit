@@ -135,9 +135,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .split { display: flex; height: 26px; border-radius: 8px; overflow: hidden; font-size: 12px; font-weight: 600; }
 .split div { display: flex; align-items: center; padding-inline: 8px; color: #fff; white-space: nowrap; overflow: hidden; min-width: 0; }
 .legend { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); gap: 8px; flex-wrap: wrap; }
-.chartbox { width: 100%; overflow: hidden; }
-.chartbox svg { display: block; width: 100%; height: auto; }
-.chartbox text { font-family: var(--font-num); font-size: 9px; fill: var(--muted); }
 
 /* list */
 .day { display: flex; flex-direction: column; }
@@ -168,6 +165,33 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .danger { flex: 1; border: 0; background: var(--bad); color: #fff; padding: 13px; border-radius: 12px; font-weight: 600; }
 .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 13.5px; z-index: 30; max-width: calc(100% - 32px); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* calendar */
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 4px; }
+.cal .dow { font-size: 10.5px; text-align: center; color: var(--muted); font-weight: 600; letter-spacing: .04em; padding-bottom: 2px; }
+.cal button { aspect-ratio: 1 / 1.08; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 2px; min-width: 0; color: var(--ink); }
+.cal button .d { font-size: 12.5px; font-weight: 600; line-height: 1.1; }
+.cal button .a { font-family: var(--font-num); font-size: 9.5px; color: var(--muted); white-space: nowrap; overflow: hidden; max-width: 100%; line-height: 1.2; }
+.cal button.has .a { color: var(--ink); font-weight: 600; }
+.cal button.today { border: 2px solid var(--accent); }
+.cal button.future { opacity: .4; }
+.cal button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.cal button[aria-pressed="true"] .a { color: var(--bg); }
+.calinfo { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13.5px; background: var(--bg); border-radius: 10px; padding: 9px 11px; }
+.calinfo span { min-width: 0; }
+.calkey { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); }
+.calkey i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+/* donut */
+.donutwrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.donutwrap svg { width: min(230px, 72vw); height: auto; display: block; }
+.donutwrap .seg { cursor: pointer; transition: opacity .2s, stroke-width .2s; }
+.donutwrap text { pointer-events: none; }
+.donutwrap .dl { font-family: var(--font-body); font-size: 10.5px; fill: var(--muted); font-weight: 600; }
+.donutwrap .dt { font-family: var(--font-num); font-size: 17px; fill: var(--ink); font-weight: 600; }
+.donutwrap .dp { font-family: var(--font-num); font-size: 10.5px; fill: var(--muted); }
+.hint { font-size: 12px; color: var(--muted); text-align: center; margin: 0; }
+button.catrow { border: 0; background: none; text-align: left; width: 100%; padding: 4px 6px; margin: 0 -6px; width: calc(100% + 12px); border-radius: 8px; font: inherit; color: inherit; cursor: pointer; }
+button.catrow:hover { background: var(--bg); }
+button.catrow[aria-pressed="true"] { background: var(--accent-soft); }
 .menu { display: flex; flex-direction: column; gap: 8px; }
 .menu button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 12px 14px; }
 .menu button b { font-weight: 600; font-size: 14.5px; }
@@ -253,17 +277,24 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     </form>
   </section>
 
+  <section class="card" aria-labelledby="calTitle">
+    <div class="card-head">
+      <h2 id="calTitle">Per tanggal</h2>
+      <span class="label">Tap tanggal</span>
+    </div>
+    <div class="cal" id="cal"></div>
+    <div class="calinfo" id="calInfo"></div>
+    <div class="calkey" id="calKey"></div>
+  </section>
+
   <section class="card" aria-labelledby="insTitle">
     <h2 id="insTitle">Ke mana duitnya pergi</h2>
+    <div class="donutwrap" id="donutWrap"><div id="donut"></div><p class="hint">Tap potongan atau kategori buat lihat transaksinya</p></div>
     <div class="cats" id="cats"></div>
     <div id="splitBlock" style="display:flex;flex-direction:column;gap:6px">
       <div class="label">Kebutuhan vs keinginan</div>
       <div class="split" id="split"></div>
       <div class="legend" id="splitLegend"></div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <div class="label">Pengeluaran per hari</div>
-      <div class="chartbox" id="chart"></div>
     </div>
   </section>
 
@@ -303,6 +334,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   const QUICK = [10000, 15000, 25000, 50000, 100000];
   const MONTHS = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
   const DAYS = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+  const DAYS_FULL = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
 
   const $ = id => document.getElementById(id);
   const fmt = n => Math.round(n).toLocaleString("id-ID");
@@ -320,6 +352,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     cat: "makan",
     need: "need",
     filter: "all",
+    day: null,
     editing: null,
     mode: "loading",       // db | local | loading
   };
@@ -400,12 +433,21 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     }
     $("avg").textContent = daysElapsed && total ? short(total / daysElapsed) : "—";
 
+    if (state.day && !state.day.startsWith(monthKey(y, m))) state.day = null;
+    renderCal(list, y, m, dim);
+    renderDonut(list, total);
     renderCats(list, total);
     renderSplit(list, total);
-    renderChart(list, y, m, dim);
     renderFilters(list);
     renderList(list);
   }
+
+  function catSums(list) {
+    const sums = {};
+    list.forEach(e => sums[e.cat] = (sums[e.cat] || 0) + Number(e.amount));
+    return Object.entries(sums).sort((a, b) => b[1] - a[1]);
+  }
+  function selectCat(cid) { state.filter = state.filter === cid ? "all" : cid; render(); }
 
   function renderCats(list, total) {
     const box = $("cats"); box.innerHTML = "";
@@ -413,19 +455,93 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
       box.innerHTML = `<div class="empty"><strong>Belum ada data bulan ini</strong>Begitu kamu catat pengeluaran pertama, rincian per kategori muncul di sini.</div>`;
       return;
     }
-    const sums = {};
-    list.forEach(e => sums[e.cat] = (sums[e.cat] || 0) + Number(e.amount));
-    const rows = Object.entries(sums).sort((a, b) => b[1] - a[1]);
+    const rows = catSums(list);
     const max = rows[0][1];
     rows.forEach(([cid, v]) => {
       const c = CAT[cid] || CAT.lainnya;
-      const el = document.createElement("div"); el.className = "catrow";
+      const el = document.createElement("button"); el.type = "button"; el.className = "catrow";
+      el.setAttribute("aria-pressed", state.filter === cid);
       el.innerHTML = `<div class="nm"><span class="dot" style="background:${c.color}"></span><span></span></div>
         <div class="val">${rp(v)}<em>${Math.round(v/total*100)}%</em></div>
         <div class="track"><i style="width:${v/max*100}%;background:${c.color}"></i></div>`;
       el.querySelector(".nm span:last-child").textContent = c.name;
+      el.onclick = () => selectCat(cid);
       box.appendChild(el);
     });
+  }
+
+  function renderDonut(list, total) {
+    const wrap = $("donutWrap");
+    if (!total) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+    const rows = catSums(list);
+    const R = 70, C = 2 * Math.PI * R, gap = rows.length > 1 ? 2.5 : 0;
+    let off = 0;
+    let svg = `<svg viewBox="0 0 200 200" role="img" aria-label="Diagram porsi pengeluaran per kategori">`;
+    rows.forEach(([cid, v]) => {
+      const c = CAT[cid] || CAT.lainnya;
+      const len = C * v / total, dash = Math.max(0.6, len - gap);
+      const sel = state.filter === cid, faded = state.filter !== "all" && !sel;
+      svg += `<circle class="seg" data-cat="${cid}" cx="100" cy="100" r="${R}" fill="none" stroke="${c.color}" stroke-width="${sel ? 34 : 27}"
+        stroke-dasharray="${dash.toFixed(2)} ${(C - dash).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}"
+        transform="rotate(-90 100 100)" opacity="${faded ? 0.22 : 1}"><title>${c.name}: ${rp(v)}</title></circle>`;
+      off += len;
+    });
+    const money = v => v >= 1e6 ? "Rp" + short(v) : rp(v);
+    let lbl = "TOTAL", amt = money(total), pct = `${rows.length} kategori`;
+    if (state.filter !== "all") {
+      const hit = rows.find(r => r[0] === state.filter);
+      if (hit) { lbl = (CAT[hit[0]] || CAT.lainnya).name.toUpperCase(); amt = money(hit[1]); pct = `${Math.round(hit[1] / total * 100)}% dari total`; }
+    }
+    svg += `<text x="100" y="88" text-anchor="middle" class="dl">${lbl}</text>
+      <text x="100" y="110" text-anchor="middle" class="dt">${amt}</text>
+      <text x="100" y="127" text-anchor="middle" class="dp">${pct}</text></svg>`;
+    $("donut").innerHTML = svg;
+    $("donut").querySelectorAll(".seg").forEach(el => el.addEventListener("click", () => selectCat(el.dataset.cat)));
+  }
+
+  function renderCal(list, y, m, dim) {
+    const per = new Array(dim).fill(0), cnt = new Array(dim).fill(0);
+    list.forEach(e => { const d = Number((e.date || "").slice(8, 10)); if (d >= 1 && d <= dim) { per[d-1] += Number(e.amount); cnt[d-1]++; } });
+    const max = Math.max(...per);
+    const daily = state.budget > 0 ? state.budget / dim : 0;
+    const tKey = todayStr();
+    const lead = (new Date(y, m, 1).getDay() + 6) % 7; // Senin = kolom pertama
+    const box = $("cal"); box.innerHTML = "";
+    ["Sen","Sel","Rab","Kam","Jum","Sab","Min"].forEach(n => { const el = document.createElement("div"); el.className = "dow"; el.textContent = n; box.appendChild(el); });
+    for (let i = 0; i < lead; i++) box.appendChild(document.createElement("div"));
+    for (let d = 1; d <= dim; d++) {
+      const key = `${y}-${pad(m+1)}-${pad(d)}`, v = per[d-1];
+      const b = document.createElement("button"); b.type = "button";
+      b.className = [v ? "has" : "", key === tKey ? "today" : "", key > tKey ? "future" : ""].join(" ").trim();
+      b.setAttribute("aria-pressed", state.day === key);
+      b.setAttribute("aria-label", `${d} ${MONTHS[m]}: ${v ? rp(v) : "tidak ada pengeluaran"}`);
+      if (v && state.day !== key) {
+        b.style.background = daily && v > daily
+          ? "color-mix(in srgb, var(--warn) 34%, var(--surface))"
+          : `color-mix(in srgb, var(--accent) ${Math.round(8 + 30 * v / max)}%, var(--surface))`;
+      }
+      b.innerHTML = `<span class="d">${d}</span><span class="a">${v ? short(v) : "·"}</span>`;
+      b.onclick = () => { state.day = state.day === key ? null : key; render(); };
+      box.appendChild(b);
+    }
+    const info = $("calInfo");
+    if (state.day) {
+      const d = Number(state.day.slice(8, 10)), dt = new Date(y, m, d);
+      info.innerHTML = `<span>${DAYS_FULL[dt.getDay()]}, ${d} ${MONTHS[m]} · <b class="num">${rp(per[d-1])}</b> · ${cnt[d-1]} transaksi</span>
+        <span style="display:flex;gap:14px">${cnt[d-1] ? '<button class="linkbtn" data-a="see">Lihat transaksi</button>' : ""}<button class="linkbtn" data-a="clear">Tutup</button></span>`;
+      info.querySelector('[data-a="clear"]').onclick = () => { state.day = null; render(); };
+      const see = info.querySelector('[data-a="see"]');
+      if (see) see.onclick = () => $("listTitle").scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (max > 0) {
+      const big = per.indexOf(max) + 1;
+      const active = per.filter(Boolean).length;
+      info.innerHTML = `<span>Paling boros: <b>${big} ${MONTHS[m].slice(0,3)}</b> · <b class="num">${rp(max)}</b></span><span class="num" style="color:var(--muted)">${active} hari ada pengeluaran</span>`;
+    } else {
+      info.innerHTML = `<span style="color:var(--muted)">Belum ada pengeluaran di ${MONTHS[m]}.</span>`;
+    }
+    $("calKey").innerHTML = `<span><i style="background:color-mix(in srgb, var(--accent) 38%, var(--surface))"></i>makin pekat = makin besar</span>` +
+      (daily ? `<span><i style="background:color-mix(in srgb, var(--warn) 34%, var(--surface))"></i>lewat jatah ${short(daily)}/hari</span>` : "");
   }
 
   function renderSplit(list, total) {
@@ -441,44 +557,6 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     $("splitLegend").innerHTML = `<span>Kebutuhan <b class="num">${rp(need)}</b></span><span>Keinginan <b class="num">${rp(want)}</b></span>`;
   }
 
-  function renderChart(list, y, m, dim) {
-    const per = new Array(dim).fill(0);
-    list.forEach(e => { const d = Number(e.date.slice(8, 10)); if (d >= 1 && d <= dim) per[d-1] += Number(e.amount); });
-    const max = Math.max(...per);
-    const W = 340, H = 120, padL = 30, padB = 16, padT = 8;
-    const iw = W - padL - 4, ih = H - padB - padT;
-    const bw = iw / dim;
-    const now = new Date();
-    const todayIdx = (y === now.getFullYear() && m === now.getMonth()) ? now.getDate() - 1 : -1;
-    const dailyBudget = state.budget > 0 ? state.budget / dim : 0;
-    const top = Math.max(max, dailyBudget) ? niceTop(Math.max(max, dailyBudget)) : 100000;
-    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik pengeluaran harian">`;
-    [0, 0.5, 1].forEach(t => {
-      const yy = padT + ih - ih * t;
-      s += `<line x1="${padL}" x2="${W-4}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-width="1" ${t ? 'stroke-dasharray="2 3"' : ""}/>`;
-      s += `<text x="${padL-4}" y="${yy+3}" text-anchor="end">${t ? short(top*t) : "0"}</text>`;
-    });
-    if (state.budget > 0) {
-      const daily = state.budget / dim;
-      if (daily <= top) {
-        const yy = padT + ih - ih * (daily / top);
-        s += `<line x1="${padL}" x2="${W-4}" y1="${yy}" y2="${yy}" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="4 3"/>`;
-        s += `<text x="${W-6}" y="${yy-3}" text-anchor="end" style="fill:var(--accent)">jatah ${short(daily)}</text>`;
-      }
-    }
-    per.forEach((v, i) => {
-      const h = v ? Math.max(2, ih * v / top) : 0;
-      const x = padL + i * bw + bw * 0.18;
-      const over = state.budget > 0 && v > state.budget / dim;
-      if (h) s += `<rect x="${x.toFixed(1)}" y="${(padT+ih-h).toFixed(1)}" width="${(bw*0.64).toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" fill="${over ? "var(--warn)" : "var(--ink)"}" opacity="${i === todayIdx ? 1 : 0.78}"><title>${i+1} ${MONTHS[m]}: ${rp(v)}</title></rect>`;
-      if ([0, 9, 19, dim-1].includes(i)) s += `<text x="${(padL + i*bw + bw/2).toFixed(1)}" y="${H-3}" text-anchor="middle">${i+1}</text>`;
-    });
-    if (todayIdx > -1) s += `<circle cx="${(padL + todayIdx*bw + bw/2).toFixed(1)}" cy="${padT+ih+4}" r="2" fill="var(--accent)"/>`;
-    s += `</svg>`;
-    $("chart").innerHTML = s;
-  }
-  function niceTop(v) { const p = Math.pow(10, Math.floor(Math.log10(v))); const n = v / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p; }
-
   function renderFilters(list) {
     const used = new Set(list.map(e => e.cat));
     if (state.filter !== "all" && !used.has(state.filter)) state.filter = "all";
@@ -491,16 +569,29 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
       b.onclick = () => { state.filter = id; render(); };
       f.appendChild(b);
     };
+    if (state.day) {
+      const d = Number(state.day.slice(8, 10));
+      const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", "true");
+      b.textContent = `Tgl ${d} ${MONTHS[state.view.m].slice(0,3)} ×`;
+      b.setAttribute("aria-label", "Hapus filter tanggal");
+      b.onclick = () => { state.day = null; render(); };
+      f.appendChild(b);
+    }
     mk("all", "Semua");
     CATS.filter(c => used.has(c.id)).forEach(c => mk(c.id, c.name, c.color));
-    f.hidden = used.size < 2;
+    f.hidden = used.size < 2 && !state.day;
   }
 
   function renderList(list) {
     const box = $("list"); box.innerHTML = "";
     let rows = state.filter === "all" ? list : list.filter(e => e.cat === state.filter);
+    if (state.day) rows = rows.filter(e => e.date === state.day);
     rows = rows.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || 0) - (a.createdAt || 0));
     $("listCount").textContent = rows.length ? `${rows.length} transaksi` : "";
+    if (!rows.length && (state.day || state.filter !== "all")) {
+      box.innerHTML = `<div class="empty"><strong>Nggak ada transaksi yang cocok</strong>Coba hapus filter tanggal atau kategori di atas.</div>`;
+      return;
+    }
     if (!rows.length) {
       box.innerHTML = `<div class="empty"><strong>Belum ada transaksi di ${MONTHS[state.view.m]}</strong>Ketik nominal di atas, pilih kategori, lalu Simpan. Biasakan catat langsung setelah bayar, jangan ditunda sampai malam.</div>`;
       return;
@@ -645,8 +736,8 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   };
 
   // ---------- month nav ----------
-  $("prevM").onclick = () => { let { y, m } = state.view; m--; if (m < 0) { m = 11; y--; } state.view = { y, m }; render(); };
-  $("nextM").onclick = () => { let { y, m } = state.view; m++; if (m > 11) { m = 0; y++; } state.view = { y, m }; render(); };
+  $("prevM").onclick = () => { let { y, m } = state.view; m--; if (m < 0) { m = 11; y--; } state.view = { y, m }; state.day = null; render(); };
+  $("nextM").onclick = () => { let { y, m } = state.view; m++; if (m > 11) { m = 0; y++; } state.view = { y, m }; state.day = null; render(); };
 
   // ---------- backup, ekspor, impor ----------
   async function giveFile(name, text, mime) {
@@ -745,7 +836,12 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 
   load();
   renderCatChips(); renderSeg(); render();
-  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded) { reloaded = true; location.reload(); } });
+    navigator.serviceWorker.register("sw.js").then(r => r.update()).catch(() => {});
+  }
 })();
 </script>
 </body>
